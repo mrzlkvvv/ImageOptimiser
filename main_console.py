@@ -9,7 +9,7 @@ total_size = 0
 for root, _, files in walk(directory):
     for file in files:
         path = f'{root}/{file}'
-        if file.title().split('.')[-1].lower() in ['jpg', 'jpeg', 'img', 'png']:
+        if file.split('.')[-1].lower() in ['jpg', 'jpeg', 'img', 'png', 'bmp', 'ico']:
             try:
                 total_size += getsize(path)
                 image = Image.open(path)
@@ -19,4 +19,4 @@ for root, _, files in walk(directory):
             except Exception as e:
                 print(f'[-] "{file}" вызвала ошибку: {e}')
 
-print(f'Завершено. Было сэкономлено {total_size//1048576} мегабайт.')
+print(f'Завершено. Было сэкономлено {total_size//1048576} МБ.')
