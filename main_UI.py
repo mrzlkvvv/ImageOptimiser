@@ -64,7 +64,7 @@ class Ui_MainWindow(object):
         for root, _, files in walk(directory):
             for file in files:
                 path = f'{root}/{file}'
-                if file.split('.')[-1].lower() in ['jpg', 'jpeg', 'img', 'png', 'bmp', 'ico']:
+                if file.split('.')[-1].lower() in {'jpg', 'jpeg', 'img', 'png', 'bmp', 'ico'}:
                     try:
                         total_size += getsize(path)
                         image = Image.open(path)

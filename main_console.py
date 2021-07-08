@@ -23,7 +23,7 @@ if __name__ == '__main__':
     for root, _, files in walk(directory):
         for file in files:
             path = f'{root}/{file}'
-            if file.split('.')[-1].lower() in ['jpg', 'jpeg', 'img', 'png', 'bmp', 'ico']:
+            if file.split('.')[-1].lower() in {'jpg', 'jpeg', 'img', 'png', 'bmp', 'ico'}:
                 DeleteMeta(path)
 
     print(f'Завершено. Было сэкономлено {total_size//1048576} МБ.')
