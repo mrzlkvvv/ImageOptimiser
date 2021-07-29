@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from os import walk, chdir
 from os.path import getsize
 from PIL import Image
@@ -7,23 +6,23 @@ from sys import argv, exit
 
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
+    def setup_ui(self, MainWindow):
         MainWindow.setMinimumSize(QtCore.QSize(444, 222))
         MainWindow.setMaximumSize(QtCore.QSize(444, 222))
 
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        MainWindow.setCentralWidget(self.centralwidget)
+        self.central_widget = QtWidgets.QWidget(MainWindow)
+        MainWindow.setCentralWidget(self.central_widget)
 
         font = QtGui.QFont()
         font.setFamily('Verdana')
         font.setPointSize(9)
         font.setItalic(True)
 
-        self.Input = QtWidgets.QLineEdit(self.centralwidget)
+        self.Input = QtWidgets.QLineEdit(self.central_widget)
         self.Input.setGeometry(QtCore.QRect(20, 40, 401, 41))
         self.Input.setFont(font)
 
-        self.horizontalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
+        self.horizontalLayoutWidget = QtWidgets.QWidget(self.central_widget)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(10, 150, 421, 41))
 
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
@@ -34,42 +33,37 @@ class Ui_MainWindow(object):
 
         self.SelectDirButton = QtWidgets.QPushButton(self.horizontalLayoutWidget)
         self.SelectDirButton.setFont(font)
-        self.SelectDirButton.clicked.connect(self.getDirectory)
+        self.SelectDirButton.clicked.connect(self.get_directory)
         self.horizontalLayout.addWidget(self.SelectDirButton)
 
         self.StartButton = QtWidgets.QPushButton(self.horizontalLayoutWidget)
         self.StartButton.setFont(font)
-        self.StartButton.clicked.connect(self.deleteMeta)
+        self.StartButton.clicked.connect(self.delete_meta)
         self.horizontalLayout.addWidget(self.StartButton)
 
-        self.retranslateUi(MainWindow)
+        MainWindow.setWindowTitle('DeleteMeta')
+        self.Input.setPlaceholderText('Путь к нужной папке')
+        self.SelectDirButton.setText('Выбрать папку')
+        self.StartButton.setText('Начать')
+
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate('MainWindow', 'DeleteMeta'))
-        self.Input.setPlaceholderText(_translate('MainWindow', 'Путь к нужной папке'))
-        self.SelectDirButton.setText(_translate('MainWindow', 'Выбрать папку'))
-        self.StartButton.setText(_translate('MainWindow', 'Начать'))
-
-    def getDirectory(self):
+    def get_directory(self):
         dir_list = QtWidgets.QFileDialog.getExistingDirectory(self, 'Выбрать папку', '.')
         self.Input.setText(dir_list)
 
-    def deleteMeta(self):
-        directory = self.Input.text()
-        chdir(directory)
+    def delete_meta(self):
         total_size = 0
 
-        for root, _, files in walk(directory):
+        for root, _, files in walk(self.Input.text()):
             for file in files:
-                path = f'{root}/{file}'
                 if file.split('.')[-1].lower() in {'jpg', 'jpeg', 'img', 'png', 'bmp', 'ico'}:
+                    full_path = f'{root}/{file}'
                     try:
-                        total_size += getsize(path)
-                        image = Image.open(path)
-                        image.save(path)
-                        total_size -= getsize(path)
+                        total_size += getsize(full_path)
+                        image = Image.open(full_path)
+                        image.save(full_path)
+                        total_size -= getsize(full_path)
                     except:
                         continue
 
@@ -79,7 +73,7 @@ class Ui_MainWindow(object):
 class App(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
-        self.setupUi(self)
+        self.setup_ui(self)
 
 
 if __name__ == '__main__':
