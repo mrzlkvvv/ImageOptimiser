@@ -1,5 +1,6 @@
 from pathlib import Path
 from PIL import Image
+from datetime import datetime
 
 # Work with these extensions: {'jpg', 'jpeg', 'img', 'png', 'bmp', 'ico'} and it's uppercase analogs
 IMAGE_FILES_PATTERN = '**/*.[jJiIbBpP][mMnNcCpP][oOeEgGpP]'
@@ -18,18 +19,21 @@ def process_image(image_path):
         image.save(image_path)
         print(f'[+] "{image_path}"')
     except Exception as e:
-        print(f'[-] "{image_path}" вызвала ошибку: {e}')
+        print(f'[-] "{image_path}": {e}')
 
 
 def main():
-    dir_path = input('Папка с фотографиями: ')
+    dir_path = input('Path to directory with photos: ')
+    start_time = datetime.now()
     size_before = get_dir_size(dir_path)
 
     for file_path in Path(dir_path).glob(IMAGE_FILES_PATTERN):
         process_image(file_path)
 
     size_after = get_dir_size(dir_path)
-    print(f'Завершено. Было сэкономлено {(size_before-size_after)//1048576} МБ.')
+    print('Was saved '
+          f'{(size_before-size_after)//1048576} MiB of disk space '
+          f'in {(datetime.now()-start_time).seconds} seconds.')
 
 
 if __name__ == '__main__':
