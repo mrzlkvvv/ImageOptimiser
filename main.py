@@ -2,7 +2,8 @@ from pathlib import Path
 from PIL import Image
 from datetime import datetime
 
-# Work with these extensions: {'jpg', 'jpeg', 'img', 'png', 'bmp', 'ico'} and it's uppercase analogs
+# Work with these extensions: {'jpg', 'jpeg', 'img', 'png', 'bmp', 'ico'}
+# and it's uppercase analogs
 IMAGE_FILES_PATTERN = '**/*.[jJiIbBpP][mMnNcCpP][oOeEgGpP]'
 
 
