@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from datetime import datetime
-from PIL import Image
+from PIL import Image, ImageOps
 
 # Work with these extensions: {'jpg', 'jpeg', 'img', 'png', 'bmp', 'ico'}
 # and it's uppercase analogs
@@ -21,6 +21,9 @@ def process_image(image_path) -> None:
     """Removes EXIF-data from the image."""
     try:
         image = Image.open(image_path)
+
+        # Transpose image if it is rotated through EXIF
+        image = ImageOps.exif_transpose(image)
 
         # Save image without EXIF-info
         image.save(image_path)
