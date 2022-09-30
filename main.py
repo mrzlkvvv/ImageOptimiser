@@ -1,6 +1,6 @@
 from pathlib import Path
-from PIL import Image
 from datetime import datetime
+from PIL import Image
 
 # Work with these extensions: {'jpg', 'jpeg', 'img', 'png', 'bmp', 'ico'}
 # and it's uppercase analogs
@@ -19,8 +19,8 @@ def process_image(image_path):
         image = Image.open(image_path)
         image.save(image_path)
         print(f'[+] "{image_path}"')
-    except Exception as e:
-        print(f'[-] "{image_path}": {e}')
+    except Exception as exception:
+        print(f'[-] "{image_path}": {exception}')
 
 
 def main():
