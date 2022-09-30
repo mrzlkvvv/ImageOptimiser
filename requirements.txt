@@ -1,6 +1,1 @@
 Pillow~=9.2.0
-
-# Optional: Linting
-flake8~=5.0.4
-mypy~=0.971
-types-Pillow~=9.2.1
