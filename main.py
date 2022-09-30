@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 """The script removes EXIF-data from images in the specified directory."""
 
 from pathlib import Path
@@ -29,8 +31,8 @@ def process_image(image_path) -> None:
         image.save(image_path)
 
         print(f'[+] "{image_path}"')
-    except Exception as exception:
-        print(f'[-] "{image_path}": {exception}')
+    except OSError as error:
+        print(f'[-] "{image_path}": {error}')
 
 
 def main() -> None:
