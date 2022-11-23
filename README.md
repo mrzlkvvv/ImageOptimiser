@@ -1,5 +1,5 @@
-# MetaRemover
-The script, which removes EXIF-data from images in the specified directory. 
+# ImageOptimiser
+This script removes EXIF-data from images in the specified directory. 
 
 # Results
 ![First example](./imgs/example_1.png)

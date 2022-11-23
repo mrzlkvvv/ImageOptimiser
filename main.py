@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""The script removes EXIF-data from images in the specified directory."""
+"""This script removes EXIF-data from images in the specified directory."""
 
 from pathlib import Path
 from datetime import datetime
