@@ -2,6 +2,7 @@
 
 """This script removes EXIF-data from images in the specified directory."""
 
+import os
 from pathlib import Path
 from datetime import datetime
 from PIL import Image, ImageOps
@@ -26,6 +27,9 @@ def process_image(image_path) -> None:
 
         # Transpose image if it is rotated through EXIF
         image = ImageOps.exif_transpose(image)
+
+        # Delete original image
+        os.remove(image_path)
 
         # Save image without EXIF-info
         image.save(image_path)
