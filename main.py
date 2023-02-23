@@ -3,25 +3,32 @@
 """This script removes EXIF-data from images in the specified directory."""
 
 import os
+from time import time
 from pathlib import Path
-from datetime import datetime
+
 from PIL import Image, ImageOps
 
-# Work with these extensions: {'jpg', 'jpeg', 'img', 'png', 'bmp', 'ico'}
-# and it's uppercase analogs
-IMAGE_FILES_PATTERN = '**/*.[jJiIbBpP][mMnNcCpP][oOeEgGpP]'
+
+IMAGE_FILES_FORMATS = 'jpg', 'jpeg', 'img', 'png', 'bmp', 'ico'
 
 
-def get_dir_size(dir_path) -> int:
-    """Returns size of the directory in bytes."""
-    size = 0
-    for file_path in Path(dir_path).glob(IMAGE_FILES_PATTERN):
-        size += Path(file_path).stat().st_size
-    return size
+def is_image(file_path: str) -> bool:
+    return file_path.lower().endswith(IMAGE_FILES_FORMATS)
 
 
-def process_image(image_path) -> None:
-    """Removes EXIF-data from the image."""
+def to_megabytes(bytes_: int) -> float:
+    return bytes_ / (1024 * 1024)
+
+
+def get_file_size(file_path: str) -> int:
+    return Path(file_path).stat().st_size
+
+
+def remove_exif(image_path: str) -> int:
+    """Removes EXIF-data from the image. Returns size delta in bytes"""
+
+    size_before = get_file_size(image_path)
+
     try:
         image = Image.open(image_path)
 
@@ -38,21 +45,29 @@ def process_image(image_path) -> None:
     except OSError as error:
         print(f'[-] "{image_path}": {error}')
 
+    size_after = get_file_size(image_path)
+
+    return size_before - size_after
+
 
 def main() -> None:
     """Recursive scanning of the directory with images and reducing their size"""
 
     dir_path = input('Path to directory with photos: ')
-    start_time = datetime.now()
-    size_before = get_dir_size(dir_path)
 
-    for file_path in Path(dir_path).glob(IMAGE_FILES_PATTERN):
-        process_image(file_path)
+    start_time = time()
+    size_delta = 0
 
-    size_after = get_dir_size(dir_path)
+    for current_dir, _, files in os.walk(dir_path):
+        for file in files:
+            if is_image(file):
+                size_delta += remove_exif(f'{current_dir}{file}')
+
+    time_delta = int(time() - start_time)
+
     print('Was saved '
-          f'{(size_before-size_after)//1048576} MiB of disk space '
-          f'in {(datetime.now()-start_time).seconds} seconds.')
+          f'{to_megabytes(size_delta):.1f} MB of disk space '
+          f'in {time_delta} seconds.')
 
 
 if __name__ == '__main__':
