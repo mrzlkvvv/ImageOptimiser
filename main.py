@@ -61,7 +61,7 @@ def main() -> None:
     for current_dir, _, files in os.walk(dir_path):
         for file in files:
             if is_image(file):
-                size_delta += remove_exif(f'{current_dir}{file}')
+                size_delta += remove_exif(f'{current_dir}/{file}')
 
     time_delta = int(time() - start_time)
 
