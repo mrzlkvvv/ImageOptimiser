@@ -1,0 +1,24 @@
+name: Python
+
+on: [push, pull_request]
+
+jobs:
+    Linting:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v7
+              with:
+                  enable-cache: true
+
+            - name: Install Python
+              uses: actions/setup-python@v6
+              with:
+                  python-version-file: ".python-version"
+
+            - name: Linting via Ruff
+              run: uvx ruff check
