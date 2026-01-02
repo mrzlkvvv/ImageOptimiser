@@ -1,59 +1,140 @@
 #!/usr/bin/python3
 
-"""This script removes EXIF-data from images in the specified directory."""
-
-import os
+from argparse import ArgumentParser, Namespace
+from concurrent.futures import ThreadPoolExecutor
+from os import cpu_count
+from pathlib import Path
+from secrets import token_hex
+from shutil import rmtree
 from time import time
+from typing import Iterator
 
 from PIL import Image, ImageOps
 
-from utils import is_image, to_megabytes, get_file_size
+IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.bmp', '.ico', '.webp', '.tif', '.tiff'}
+SIZE_UNITS = ('B', 'KB', 'MB', 'GB', 'TB')
+
+MAX_WORKERS = min(16, (cpu_count() or 1) * 2)
+
+TEMP_DIR = Path('.temp')
 
 
-def remove_exif(image_path: str) -> int:
-    """Removes EXIF-data from the image. Returns size delta in bytes"""
+def process_image(image_path: Path) -> int:
+    """
+    Process an image by removing EXIF data and saving it.
+    Returns size_delta (in bytes)
+    """
 
-    size_before = get_file_size(image_path)
+    size_before = image_path.stat().st_size
 
     try:
-        image = Image.open(image_path)
+        with Image.open(image_path) as image:
+            # Get file extension: PIL format with path suffix fallback
+            file_extension = (
+                image.format.lower()
+                if image.format is not None
+                else image_path.suffix[1:].lower()
+            )
 
-        # Transpose image if it is rotated through EXIF
-        image = ImageOps.exif_transpose(image)
+            # Transpose image if it is rotated through EXIF
+            if file_extension in {'jpg', 'jpeg', 'tif', 'tiff'}:
+                image = ImageOps.exif_transpose(image)
 
-        # Delete original image
-        os.remove(image_path)
+            # Save temp image without EXIF
+            temp_path = TEMP_DIR / f'{token_hex(12)}.{file_extension}'
+            image.save(temp_path, optimize=True, quality=95)
 
-        # Save image without EXIF-info
-        image.save(image_path)
+            # Calculate size reduction
+            size_after = temp_path.stat().st_size
+            size_delta = size_before - size_after
 
-        print(f'[+] "{image_path}"')
+            # Replace the original image with the new one if the file size has decreased
+            if size_delta > 0:
+                temp_path.replace(image_path)
+                print(f'[+] "{image_path}"')
+            else:
+                temp_path.unlink()
+                print(f'[=] "{image_path}"')
+
+            return size_delta
+
     except OSError as error:
         print(f'[-] "{image_path}": {error}')
+        return 0
 
-    size_after = get_file_size(image_path)
 
-    return size_before - size_after
+def get_image_paths(root_path: Path) -> Iterator[Path]:
+    """Recursively yield image file paths in the directory"""
+
+    for path in root_path.rglob('*'):
+        if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS:
+            yield path
+
+
+def get_formatted_size(bytes_: int) -> str:
+    """Convert bytes to human-readable format (e.g., '2.3 MB')"""
+
+    size = float(bytes_)
+    unit_index = 0
+
+    while size >= 1024 and unit_index < len(SIZE_UNITS) - 1:
+        size /= 1024.0
+        unit_index += 1
+
+    return f'{size:.1f} {SIZE_UNITS[unit_index]}'
+
+
+def parse_args() -> Namespace:
+    parser = ArgumentParser(
+        description='This script removes metadata from images',
+    )
+
+    parser.add_argument(
+        '-d',
+        '--directory',
+        type=Path,
+        help='directory with images',
+        required=True,
+    )
+
+    parser.add_argument(
+        '-w',
+        '--workers',
+        type=int,
+        default=MAX_WORKERS,
+        help='number of worker threads for parallel processing',
+    )
+
+    return parser.parse_args()
 
 
 def main() -> None:
-    """Recursive scanning of the directory with images and reducing their size"""
+    args = parse_args()
 
-    dir_path = input('Path to directory with photos: ')
+    dir_path = Path(args.directory)
+    if not dir_path.is_dir():
+        print(f'"{dir_path}" is not a valid directory')
+        return
 
     start_time = time()
-    size_delta = 0
 
-    for current_dir, _, files in os.walk(dir_path):
-        for file in files:
-            if is_image(file):
-                size_delta += remove_exif(f'{current_dir}/{file}')
+    TEMP_DIR.mkdir(exist_ok=True)
 
-    time_delta = int(time() - start_time)
+    try:
+        with ThreadPoolExecutor(max_workers=args.workers) as executor:
+            total_size_delta = sum(
+                executor.map(process_image, get_image_paths(dir_path))
+            )
+    finally:
+        rmtree(TEMP_DIR, ignore_errors=True)
 
-    print('Was saved '
-          f'{to_megabytes(size_delta):.1f} MB of disk space '
-          f'in {time_delta} seconds.')
+    elapsed = time() - start_time
+
+    if total_size_delta > 0:
+        formatted_size = get_formatted_size(total_size_delta)
+        print(f'Saved {formatted_size} of disk space in {elapsed:.2f} seconds')
+    else:
+        print(f'No disk space was saved in {elapsed:.2f} seconds :(')
 
 
 if __name__ == '__main__':
